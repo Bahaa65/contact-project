@@ -7,10 +7,9 @@ import Header from './components/Header';
 import SearchBar from './components/SearchBar';
 
 function App() {
-  const [contacts, setContacts] = useState<{ name: string; phone: string }[]>([]);
+  const [contacts, setContacts] = useState<{ name: string; phone: string; email: string }[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
 
- 
   const filteredContacts = contacts.filter(contact =>
     contact.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
