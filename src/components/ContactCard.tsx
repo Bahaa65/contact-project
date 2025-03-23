@@ -3,13 +3,15 @@ import React from 'react';
 type ContactCardProps = {
   name: string;
   phone: string;
+  email: string;
 };
 
-const ContactCard: React.FC<ContactCardProps> = ({ name, phone }) => {
+const ContactCard: React.FC<ContactCardProps> = ({ name, phone, email }) => {
   return (
     <div className="contact-card">
-      <h3>{name}</h3>
-      <p>{phone}</p>
+      <span className="contact-info">{name}</span>
+      <span className="contact-info">{phone}</span>
+      <span className="contact-info">{email}</span>
     </div>
   );
 };
