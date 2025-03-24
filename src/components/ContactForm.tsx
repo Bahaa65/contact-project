@@ -1,81 +1,143 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import {
+  Box,
+  Button,
+  FormControl,
+  FormLabel,
+  Input,
+  VStack,
+  useToast,
+} from '@chakra-ui/react';
 
-type ContactFormProps = {
-  setContacts: React.Dispatch<React.SetStateAction<any[]>>;
+type Contact = {
+  id?: string;
+  name: string;
+  phone: string;
+  email: string;
 };
 
-const ContactForm: React.FC<ContactFormProps> = ({ setContacts }) => {
-  const [name, setName] = useState('');
-  const [phone, setPhone] = useState('');
-  const [email, setEmail] = useState('');
-  const [error, setError] = useState<string>('');
+type ContactFormProps = {
+  onSubmit: (contact: Contact) => void;
+  buttonText: string;
+  initialData?: Contact;
+  contacts?: Contact[];
+};
+
+const ContactForm: React.FC<ContactFormProps> = ({ onSubmit, buttonText, contacts }) => {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const toast = useToast();
+
+  const initialContact = contacts?.find(contact => contact.id === id);
+
+  const [name, setName] = useState(initialContact?.name || '');
+  const [phone, setPhone] = useState(initialContact?.phone || '');
+  const [email, setEmail] = useState(initialContact?.email || '');
+
+  useEffect(() => {
+    if (initialContact) {
+      setName(initialContact.name);
+      setPhone(initialContact.phone);
+      setEmail(initialContact.email);
+    }
+  }, [initialContact]);
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Allow only numbers
+    const value = e.target.value;
+    if (/^[\d]*$/.test(value)) {
+      setPhone(value);
+    }
+  };
+
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setEmail(value);
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-
-    // Validate fields
-    if (!name || !phone || !email) {
-      setError('All fields are required');
-      return;
-    }
-
-    // Validate name (should only contain letters)
-    if (/[\d]/.test(name)) {
-      setError('Name should contain only letters');
-      return;
-    }
-
-    // Validate phone (should only contain numbers)
     if (!/^\d+$/.test(phone)) {
-      setError('Phone number should contain only numbers');
+      toast({
+        title: "Invalid phone number",
+        description: "Please enter a valid phone number.",
+        status: "error",
+        duration: 2000,
+        isClosable: true,
+      });
       return;
     }
 
-    // Validate email format
-    const emailPattern = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
-    if (!emailPattern.test(email)) {
-      setError('Please enter a valid email address');
+    if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email)) {
+      toast({
+        title: "Invalid email address",
+        description: "Please enter a valid email address.",
+        status: "error",
+        duration: 2000,
+        isClosable: true,
+      });
       return;
     }
 
-    // Add contact if all validations pass
-    setContacts((prevContacts) => [
-      ...prevContacts,
-      { name, phone, email },
-    ]);
-
-    // Reset fields after adding contact
-    setName('');
-    setPhone('');
-    setEmail('');
-    setError('');
+    onSubmit({
+      id: id || undefined,
+      name,
+      phone,
+      email,
+    });
+    toast({
+      title: id ? "Contact updated" : "Contact added",
+      status: "success",
+      duration: 2000,
+      isClosable: true,
+    });
+    navigate('/');
   };
 
   return (
-    <div>
-      <form onSubmit={handleSubmit}>
-        <input
-          type="text"
-          placeholder="Enter name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-        />
-        <input
-          type="text"
-          placeholder="Enter phone number"
-          value={phone}
-          onChange={(e) => setPhone(e.target.value)}
-        />
-        <input
-          type="email"
-          placeholder="Enter email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
-        {error && <p style={{ color: 'red' }}>{error}</p>}
-        <button type="submit">Add Contact</button>
-      </form>
-    </div>
+    <Box as="form" onSubmit={handleSubmit}>
+      <VStack spacing={4}>
+        <FormControl isRequired>
+          <FormLabel htmlFor="name">Name</FormLabel>
+          <Input
+            id="name"
+            name="name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Enter name"
+          />
+        </FormControl>
+
+        <FormControl isRequired>
+          <FormLabel htmlFor="phone">Phone</FormLabel>
+          <Input
+            id="phone"
+            name="phone"
+            value={phone}
+            onChange={handlePhoneChange}
+            placeholder="Enter phone number"
+            type="tel"
+          />
+        </FormControl>
+
+        <FormControl isRequired>
+          <FormLabel htmlFor="email">Email</FormLabel>
+          <Input
+            id="email"
+            name="email"
+            value={email}
+            onChange={handleEmailChange}
+            placeholder="Enter email"
+            type="email"
+          />
+        </FormControl>
+
+        <Button type="submit" colorScheme="teal" width="full">
+          {buttonText}
+        </Button>
+      </VStack>
+    </Box>
   );
 };
 
